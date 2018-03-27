@@ -1,19 +1,24 @@
-from glob import glob
+import gzip
+import shutil
+from collections import Counter
 import xml.etree.ElementTree as ET
-from os.path import dirname, abspath, join
+from os import mkdir, remove
+from os.path import dirname, abspath, exists, join
 from nltk.corpus import stopwords
 from nltk.tokenize import sent_tokenize, word_tokenize
-from collections import Counter
 from nltk import pos_tag
 from nltk.stem import WordNetLemmatizer
 from nltk.corpus import wordnet
 from functools import lru_cache
+from six.moves.urllib import request
+
 
 PROJECT_ROOT = dirname(abspath(__file__))
 
 stop_words = stopwords.words('english')
 wordnet_lemmatizer = WordNetLemmatizer()
 lemmatize = lru_cache(maxsize=50000)(wordnet_lemmatizer.lemmatize)
+
 
 def get_wordnet_pos(treebank_tag):
     if treebank_tag.startswith('J'):
@@ -27,10 +32,24 @@ def get_wordnet_pos(treebank_tag):
     else:
         return wordnet.NOUN
 
+
+data_path = join(PROJECT_ROOT, 'data')
+if not exists(data_path):
+    mkdir(data_path)
+
 word_counts = Counter()
-xml_files = glob(join(PROJECT_ROOT, 'data', '*.xml'))
-for f in xml_files:
-    tree = ET.parse(f)
+for i in range(1, 928):
+    num = str(i).zfill(4)
+    print('Downloading pubmed18n{}.xml.gz ...'.format(num))
+    request.urlretrieve(
+        'ftp://ftp.ncbi.nlm.nih.gov/pubmed/baseline/pubmed18n{}.xml.gz'.format(num),
+        join(data_path, 'pubmed18n{}.xml.gz'.format(num)))
+    print('Extracting pubmed18n{}.xml.gz ...'.format(num))
+    file_name_in = join(data_path, 'pubmed18n{}.xml.gz'.format(num))
+    file_name_out = join(data_path, 'pubmed18n{}.xml'.format(num))
+    with gzip.open(file_name_in, 'rb') as f_in, open(file_name_out, 'wb') as f_out:
+            shutil.copyfileobj(f_in, f_out)
+    tree = ET.parse(file_name_out)
     root = tree.getroot()
     for article in root.findall('PubmedArticle'):
         try:
@@ -48,7 +67,9 @@ for f in xml_files:
                 word_counts.update(temp_words)
         except AttributeError:
             continue
-
+    print('Finished prcessing the pubmed18n{}'.format(num))
+    remove(file_name_in)
+    remove(file_name_out)
 
 for s in stop_words + [',', '.', '?', ';', '/', '\\', '!', '*', '(', ')', '|', '{', '}', '[', ']', '-', '>', '<', "'"]:
     if s in word_counts:
@@ -56,5 +77,4 @@ for s in stop_words + [',', '.', '?', ';', '/', '\\', '!', '*', '(', ')', '|', '
 
 with open('stop_words_1000.csv', 'w') as f:
     for w, count in word_counts.most_common(1000):
-        f.wrte(w + ',' + str(count) + '\n' )
-
+        f.wrte(w + ',' + str(count) + '\n')
