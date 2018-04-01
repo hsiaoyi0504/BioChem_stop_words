@@ -77,4 +77,4 @@ for s in stop_words + [',', '.', '?', ';', '/', '\\', '!', '*', '(', ')', '|', '
 
 with open('stop_words_1000.csv', 'w') as f:
     for w, count in word_counts.most_common(1000):
-        f.wrte(w + ',' + str(count) + '\n')
+        f.write(w + ',' + str(count) + '\n')
