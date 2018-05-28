@@ -1,5 +1,6 @@
 import gzip
 import shutil
+import re
 from collections import Counter
 import xml.etree.ElementTree as ET
 from os import mkdir, remove
@@ -59,7 +60,8 @@ for i in range(1, 928):
             except TypeError:
                 continue
             for s in sentences:
-                text = word_tokenize(s)
+                temp = s.sub(r'\d+', '', s)
+                text = word_tokenize(temp)
                 tagged_text = pos_tag(text)
                 temp_words = []
                 for t, tag in tagged_text:
@@ -71,7 +73,7 @@ for i in range(1, 928):
     remove(file_name_in)
     remove(file_name_out)
 
-for s in stop_words + [',', '.', '?', ';', '/', '\\', '!', '*', '(', ')', '|', '{', '}', '[', ']', '-', '>', '<', "'"]:
+for s in stop_words + [',', '.', '?', ';', '/', '\\', '!', '*', '(', ')', '|', '{', '}', '[', ']', '-', '>', '<', "'", '%', '=', ':', '+/-', "''", '``', '+', '--']:
     if s in word_counts:
         del word_counts[s]
 
