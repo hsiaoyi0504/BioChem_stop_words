@@ -60,7 +60,7 @@ for i in range(1, 928):
             except TypeError:
                 continue
             for s in sentences:
-                temp = s.sub(r'\d+', '', s)
+                temp = re.sub(r'\d+', '', s)
                 text = word_tokenize(temp)
                 tagged_text = pos_tag(text)
                 temp_words = []
