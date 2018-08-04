@@ -7,7 +7,8 @@ The project is to generate stop words list that will be useful for bioinformatic
 
 ## Usage
 ```
-python3 setup.py
+pip install -r requriements.txt
+python setup.py
 python3 main.py
 ```
 
