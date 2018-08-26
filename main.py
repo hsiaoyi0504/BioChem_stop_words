@@ -43,7 +43,7 @@ if not exists(data_path):
 if exists('checkpoint.pkl'):
     with open('checkpoint.pkl', 'rb') as f:
         num, word_counts = pickle.load(f)
-    iter_range = range(int(num), NUM_FILES)
+    iter_range = range(int(num) + 1, NUM_FILES) # start from next one
 else:
     iter_range = range(1, NUM_FILES)
     word_counts = Counter()
@@ -51,9 +51,14 @@ else:
 for i in iter_range:
     num = str(i).zfill(4)
     print('Downloading pubmed18n{}.xml.gz ...'.format(num))
-    request.urlretrieve(
-        'ftp://ftp.ncbi.nlm.nih.gov/pubmed/baseline/pubmed18n{}.xml.gz'.format(num),
-        join(data_path, 'pubmed18n{}.xml.gz'.format(num)))
+    while True:
+        try:
+            request.urlretrieve(
+                'ftp://ftp.ncbi.nlm.nih.gov/pubmed/baseline/pubmed18n{}.xml.gz'.format(num),
+                join(data_path, 'pubmed18n{}.xml.gz'.format(num)))
+            break
+        except ConnectionResetError:
+            continue
     print('Extracting pubmed18n{}.xml.gz ...'.format(num))
     file_name_in = join(data_path, 'pubmed18n{}.xml.gz'.format(num))
     file_name_out = join(data_path, 'pubmed18n{}.xml'.format(num))
